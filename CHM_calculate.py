@@ -1,5 +1,5 @@
 import numpy as np
-import gdal
+from osgeo import gdal
 
 def calculate_CHM(points, resolution=0.5):
     """
@@ -36,32 +36,46 @@ def calculate_CHM(points, resolution=0.5):
     
     return chm, geotransform
 
-def save_CHM(chm, geotransform, save_path=None):
+def save_CHM(CHM_array, geotransform, savepath=None):
     """
     将CHM保存为GeoTIFF文件
     
     参数:
-        chm: CHM数组
+        CHM_array: CHM数组
         geotransform: 地理变换参数
-        save_path: 保存文件的完整路径,默认为None时使用当前目录和时间戳命名
+        savepath: 保存文件的完整路径,默认为None时使用当前目录和时间戳命名
     """
     # 如果未指定保存路径,使用默认路径和文件名
-    if save_path is None:
+    if savepath is None:
         from datetime import datetime
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        save_path = f'CHM_{timestamp}.tif'
+        savepath = f'CHM_{timestamp}.tif'
         
     # 创建GeoTIFF文件
     driver = gdal.GetDriverByName('GTiff')
-    rows, cols = chm.shape
-    dataset = driver.Create(save_path, cols, rows, 1, gdal.GDT_Float32)
+    rows, cols = CHM_array.shape
+    dataset = driver.Create(savepath, cols, rows, 1, gdal.GDT_Float32)
     
     # 设置地理变换参数
     dataset.SetGeoTransform(geotransform)
     
     # 写入数据
     band = dataset.GetRasterBand(1)
-    band.WriteArray(chm)
+    band.WriteArray(CHM_array)
     
     # 清理资源
     dataset = None
+
+
+def load_CHMasArray(CHM_filepath):
+    dataset = gdal.Open(CHM_filepath)
+    CHM_array = dataset.ReadAsArray()
+    return CHM_array
+
+def load_CHM(CHM_filepath):
+    dataset = gdal.Open(CHM_filepath)
+    return dataset
+
+def convertCHM2PNG(CHM_filepath, savepath):
+    dataset = gdal.Open(CHM_filepath)
+    gdal.Translate(savepath, dataset)
