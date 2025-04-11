@@ -1,5 +1,7 @@
 import numpy as np
 from osgeo import gdal
+import matplotlib.pyplot as plt
+gdal.UseExceptions()
 
 def calculate_CHM(points, resolution=0.5):
     """
@@ -76,6 +78,28 @@ def load_CHM(CHM_filepath):
     dataset = gdal.Open(CHM_filepath)
     return dataset
 
-def convertCHM2PNG(CHM_filepath, savepath):
-    dataset = gdal.Open(CHM_filepath)
-    gdal.Translate(savepath, dataset)
+def vis_CHM_with_plt(CHM_filepath, savepath, title_, cmap_='gray'):
+    chm = load_CHMasArray(CHM_filepath=CHM_filepath)
+    # projection = chm.GetProjection()
+    # geotransform = chm.GetGeoTransform
+    # print(projection)
+    # print(geotransform)
+    plt.imshow(chm, cmap=cmap_) #viridis, gray 
+    plt.colorbar(label='Elevation (m)')
+    plt.title(title_)
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.savefig(savepath)
+    plt.show()
+
+def show_CHM_information(CHM_filepath):
+    chm = load_CHM(CHM_filepath=CHM_filepath)
+    projection = chm.GetProjection()
+    geotransform = chm.GetGeoTransform
+    print(projection)
+    print(geotransform)
+    print(chm)
+
+def save_CHM_from_pcd(pcd, CHM_savepath):
+    chm, geotransform = calculate_CHM(pcd)
+    save_CHM(CHM_array=chm, geotransform=geotransform, savepath=CHM_savepath)
